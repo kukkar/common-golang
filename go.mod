@@ -1,6 +1,6 @@
-module github.com/bharatpe/bharatpe-common-golang
+module github.com/kukkar/common-golang
 
-go 1.14
+go 1.16
 
 require (
 	github.com/getsentry/sentry-go v0.7.0
