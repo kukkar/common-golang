@@ -155,18 +155,33 @@ func (obj *MongoDriver) findOne(ctx context.Context, collection *mgo.Collection,
 // 	return obj.findAll(sess.DB(obj.conf.DbName).C(collection), bson.M(query))
 // }
 
-// // FindAll queries the mongo DB and returns all the results
-// func (obj *MongoDriver) FindAll(collection string, query map[string]interface{}) (ret []interface{}, aerr *MDBError) {
-// 	//	obj.session.Refresh()
-// 	return obj.findAll(obj.conn.Collection(collection), bson.M(query))
-// }
+// FindAll queries the mongo DB and returns all the results
+func (obj *MongoDriver) FindAll(ctx context.Context, collection string, query map[string]interface{}) (ret []interface{}, aerr *MDBError) {
+	//	obj.session.Refresh()
+	return obj.findAll(ctx, obj.conn.Collection(collection), bson.M(query))
+}
 
-// func (obj *MongoDriver) findAll(collection *mgo.Collection, query bson.M) (ret []interface{}, aerr *MDBError) {
-// 	if err := collection.Find(query).All(&ret); err != nil {
-// 		return nil, getErrObj(ErrFindAllFailure, err.Error())
-// 	}
-// 	return ret, nil
-// }
+func (obj *MongoDriver) findAll(ctx context.Context, collection *mgo.Collection, query bson.M) (ret []interface{}, aerr *MDBError) {
+
+	res := make([]interface{}, 0)
+
+	cursor, err := collection.Find(ctx, query)
+	if err != nil {
+		return nil, getErrObj(ErrFindAllFailure, cursor.Err().Error())
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		// Declare a result BSON object
+		var result bson.M
+		err := cursor.Decode(&result)
+		if err != nil {
+			return nil, getErrObj(ErrFindAllFailure, cursor.Err().Error())
+		}
+		res = append(res, result)
+	}
+	return res, nil
+}
 
 // // FindAll queries the mongo DB and returns the results with limit
 // func (obj *MongoDriver) FindWithLimit(collection string, query map[string]interface{}, skip int, limit int) (ret []interface{}, aerr *MDBError) {

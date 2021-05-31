@@ -18,8 +18,8 @@ type MDBInterface interface {
 	// //FindOneUsingSession(*MSession, string, map[string]interface{}) (interface{}, *MDBError)
 
 	// // FindAll returns all matching items
-	// FindAll(string, map[string]interface{}) ([]interface{}, *MDBError)
-
+	FindAll(ctx context.Context, collection string,
+		query map[string]interface{}) (ret []interface{}, aerr *MDBError)
 	// //FindAllUsingSession(*MSession, string, map[string]interface{}) ([]interface{}, *MDBError)
 
 	// // FindWithLimit returns all matching items with limit
