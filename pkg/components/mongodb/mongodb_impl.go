@@ -244,18 +244,19 @@ func (obj *MongoDriver) insertMany(ctx context.Context, collection *mgo.Collecti
 // 	return obj.update(sess.DB(obj.conf.DbName).C(collection), bson.M(query), value)
 // }
 
-// // Update updates the mongo DB collection passed as an argument
-// func (obj *MongoDriver) Update(collection string, query map[string]interface{}, value interface{}) *MDBError {
-// 	//	obj.session.Refresh()
-// 	return obj.update(obj.conn.Collection(collection), bson.M(query), value)
-// }
+// Update updates the mongo DB collection passed as an argument
+func (obj *MongoDriver) Update(ctx context.Context, collection string, query map[string]interface{}, value interface{}) *MDBError {
+	//	obj.session.Refresh()
+	return obj.update(ctx, obj.conn.Collection(collection), bson.M(query), value)
+}
 
-// func (obj *MongoDriver) update(collection *mgo.Collection, query bson.M, value interface{}) *MDBError {
-// 	if err := collection.Update(query, value); err != nil {
-// 		return getErrObj(ErrUpdateFailure, err.Error())
-// 	}
-// 	return nil
-// }
+func (obj *MongoDriver) update(ctx context.Context, collection *mgo.Collection, query bson.M, value interface{}) *MDBError {
+	_, err := collection.UpdateOne(ctx, query, value)
+	if err != nil {
+		return getErrObj(ErrUpdateFailure, err.Error())
+	}
+	return nil
+}
 
 // // Update updates the mongo DB collection passed as an argument
 // func (obj *MongoDriver) UpdateAll(collection string, query map[string]interface{}, value interface{}) (*mgo.ChangeInfo, *MDBError) {

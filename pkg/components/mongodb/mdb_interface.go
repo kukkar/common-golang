@@ -43,7 +43,8 @@ type MDBInterface interface {
 	// //	InsertUsingSession(*MSession, string, interface{}) *MDBError
 
 	// // Update modify existing item
-	// Update(string, map[string]interface{}, interface{}) *MDBError
+	Update(ctx context.Context, collection string,
+		query map[string]interface{}, value interface{}) *MDBError
 
 	// UpdateAll(string, map[string]interface{}, interface{}) (*mgo.ChangeInfo, *MDBError)
 
