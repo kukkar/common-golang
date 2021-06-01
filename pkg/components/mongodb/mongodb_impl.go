@@ -597,14 +597,44 @@ func (obj *MongoDriver) insertMany(ctx context.Context, collection *mgo.Collecti
 
 // }
 
-// func (obj *MongoDriver) FindSortnLoad(coll string, query map[string]interface{}, selectField map[string]interface{}, sortField string, skip int, limit int, payload interface{}) (cnt int, aerr *MDBError) {
-// 	//	obj.session.Refresh()
-// 	if err := obj.conn.Collection(coll).Find(query).Select(selectField).Sort(sortField).Skip(skip).Limit(limit).All(payload); err != nil {
-// 		return 0, getErrObj(ErrFindAllFailure, err.Error())
-// 	}
-// 	count, errC := obj.conn.Collection(coll).Find(query).Count()
-// 	if errC != nil {
-// 		return 0, getErrObj(ErrFindAllFailure, errC.Error())
-// 	}
-// 	return count, nil
-// }
+func (obj *MongoDriver) FindSortnLoad(ctx context.Context, coll string, query map[string]interface{},
+	selectField map[string]interface{},
+	sortField string, sortOrder int, skip int,
+	limit int) (res []interface{}, cnt int, aerr *MDBError) {
+
+	res = make([]interface{}, 0)
+	findOptions := options.Find()
+	// // Sort by `price` field descending
+	// if sortField != "" {
+	// 	findOptions.SetSort(bson.D{{sortField, sortOrder}})
+	// }
+
+	findOptions.SetSkip(int64(skip))
+	findOptions.SetLimit(int64(limit))
+
+	cursor, err := obj.conn.Collection(coll).Find(ctx, query, findOptions)
+	if err != nil {
+		return nil, 0, getErrObj(ErrFindAllFailure, err.Error())
+	}
+
+	if err != nil {
+		return nil, 0, getErrObj(ErrFindAllFailure, cursor.Err().Error())
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		// Declare a result BSON object
+		var result bson.M
+		err := cursor.Decode(&result)
+		if err != nil {
+			return nil, 0, getErrObj(ErrFindAllFailure, cursor.Err().Error())
+		}
+		res = append(res, result)
+	}
+
+	count, errC := obj.conn.Collection(coll).CountDocuments(ctx, query)
+	if errC != nil {
+		return nil, 0, getErrObj(ErrFindAllFailure, errC.Error())
+	}
+	return res, int(count), nil
+}
